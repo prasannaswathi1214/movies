@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Page</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+         /* Same CSS as previous example */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Login</h2>
+        <form >
+            <label for="email">username or email address</label>
+            <input type="text" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <input type="submit" value="Login" >
+        </form>
+        <p class="register-link">New user? <a href="/register">Register here</a></p>
+    </div>
+</body>
+<script>
+    // Example using fetch
+    const loginForm = document.querySelector('form');
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fd = new FormData(loginForm);
+
+        const urlEncoded = new URLSearchParams(fd).toString();
+
+        await fetch('/login', {
+            credentials: 'include',
+            method: 'POST',
+            body: urlEncoded,
+            headers: {
+                'Content-type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // Successful login, handle the redirection on the client side
+                window.location.replace("/home");
+                // console.log("200 status code issaa")
+            } else {
+                // Handle login failure on the client side
+                console.log("egirirpoyindhi");
+            }
+        })
+        .catch(error => {
+            // Handle network or other errors
+            console.error('An error occurred during login', error);
+        });
+    });
+</script>
+</html>

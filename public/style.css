@@ -1,0 +1,99 @@
+/* Reset some default browser styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  
+  .container {
+    background-color: #fff;
+    /* max-width: 400px; */
+    margin: 0 auto;
+    padding: 50px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #007BFF;
+  }
+  
+  form label {
+    display: block;
+    margin: 5px;
+    color: #333;
+    font-weight: 600;
+  }
+  
+  form input[type="text"],
+  form input[type="email"],
+  form input[type="password"],
+  form input[type="tel"] {
+    width: 100%;
+    padding: 10px;
+    margin:0px 5px 5px 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  form input[type="submit"],form input[type='button'] {
+    background-color: #007BFF;
+    color: #fff;
+    margin: 3px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  form input[type="submit"]:hover,form input[type='button']:hover {
+    background-color: #0056b3;
+  }
+  
+  .register-link {
+    text-align: center;
+    margin-top: 10px;
+    color: #555;
+  }
+  
+  .register-link a {
+    color: #007BFF;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  
+  ul {
+    list-style-type: none;
+    display: grid;
+  }
+  ul li{
+    padding: 5px;
+    margin-left: 5px;
+  }
+  a{
+    text-decoration: none;
+    color: #007BFF;
+  }
+  a:active{
+    color: #0056b3;
+  }
+  
+  
+  
+  /* {
+    username : "abcdef",
+    email : "a@bc",
+    psssword : "jinx"
+  } */
+

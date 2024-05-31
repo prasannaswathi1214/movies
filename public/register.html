@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Register</h2>
+        <form>
+
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" pattern='[a-zA-Z0-9]+' title="username can't have spaces or special characters and should be minimum of 6 characters length" minLength="6" maxLength="16" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="pass" name="password" minLength="6" maxLength="16" oninput="passVerify(this.value)" required>
+
+            <ul class="passcond">
+                <li id="len" style="color: red;">
+                    Password should contain at least 6 characters
+                </li>
+                <li id="num" style="color: red;">
+                    Password should contain at least one Number
+                </li>
+                <li id="sm" style="color: red;">
+                    Password should contain at least one small letter
+                </li>
+                <li id="cap" style="color: red;">
+                    Password should contain at least one Capital letter
+                </li>
+                <li id="spc" style="color: red;">
+                    Password should contain at least one special character
+                </li>
+            </ul>
+
+            <label for="cnfpassword">Confirm Password:</label>
+            <input type="password" id="cnfpass" name="cnfpassword" required>
+
+            <input type="submit" value="Register">
+
+        </form>
+        <p class="register-link">Already registered? <a href="/login">Login here</a></p>
+    </div>
+</body>
+<script>
+    const regForm = document.querySelector('form');
+    let passVer = false;
+
+    function passVerify(e) {
+        let numPat = /[0-9]/g;
+        let lowPat = /[a-z]/g;
+        let upPat = /[A-Z]/g;
+        let spcPat = /[^A-Za-z0-9]/g;
+
+        if (e.length >= 6) {
+            document.getElementById("len").style.color = "green";
+            passVer = true;
+        } else {
+            document.getElementById("len").style.color = "red";
+            passVer = false;
+        }
+        if (e.match(numPat)) {
+            document.getElementById("num").style.color = "green";
+            passVer = true;
+        } else {
+            document.getElementById("num").style.color = "red";
+            passVer = false;
+        }
+        if (e.match(lowPat)) {
+            document.getElementById("sm").style.color = "green";
+            passVer = true;
+        } else {
+            document.getElementById("sm").style.color = "red";
+            passVer = false;
+        }
+        if (e.match(upPat)) {
+            document.getElementById("cap").style.color = "green";
+            passVer = true;
+        } else {
+            document.getElementById("cap").style.color = "red";
+            passVer = false;
+        }
+        if (e.match(spcPat)) {
+            document.getElementById("spc").style.color = "green";
+            passVer = true;
+        } else {
+            document.getElementById("spc").style.color = "red";
+            passVer = false;
+        }
+    }
+
+    regForm.addEventListener('submit', async (e) => {
+        let pass = document.getElementById("pass").value;
+        let cnfpass = document.getElementById("cnfpass").value;
+        e.preventDefault();
+
+        if (!passVer) {
+            alert("Password didn't meet expected criteria");
+            return;
+        }
+        if (pass !== cnfpass) {
+            alert("Passwords didn't match");
+            return;
+        }
+
+        let username = document.getElementById("username").value;
+        let email = document.getElementById("email").value;
+        console.log("Trying to register...");
+
+        await fetch('/register', {
+            credentials: 'include',
+            method: 'POST',
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                password: pass
+            }),
+            headers: {
+                'Content-type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // Successful registration, handle the redirection on the client side
+                window.location.replace("/home");
+                // console.log("200 status code issued")
+            } else {
+                // Handle registration failure on the client side
+                console.log("Registration failed");
+            }
+        })
+        .catch(error => {
+            // Handle network or other errors
+            console.error('An error occurred during registration', error);
+        });
+    });
+</script>
+</html>

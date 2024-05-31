@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Movie Playlist</title>
+    <style>
+        #results-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .movie {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+        }
+
+        .movie img {
+            width: 100%;
+            height: auto;
+        }
+
+        .container {
+            display: flex;
+        }
+
+        .main-content {
+            flex: 3;
+        }
+
+        .sidebar {
+            flex: 1;
+            padding: 10px;
+            border-left: 1px solid #ccc;
+        }
+
+        .playlist {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="main-content">
+            <h2>Movie Search</h2>
+            <input type="text" id="search-bar" placeholder="Enter movie name">
+            <button id="search-btn">Search</button>
+            <div id="movie-details"></div>
+            <div id="nav-buttons">
+                <button id="prev-btn">Prev</button>
+                <button id="next-btn">Next</button>
+            </div>
+            <div id="results-container"></div>
+        </div>
+
+        <form method="post" action="/logout">
+            <input type="submit" value="logout">
+        </form>
+
+        <div class="sidebar">
+            <h2>Playlists</h2>
+            <form id="create-playlist-form">
+                <input type="text" id="playlist-name" placeholder="Playlist name" required>
+                <label>
+                    <input type="checkbox" id="playlist-private"> Private
+                </label>
+                <button type="submit">Create Playlist</button>
+            </form>
+            <div id="playlists"></div>
+        </div>
+    </div>
+
+
+
+    <script>
+        const buttons = document.getElementById("nav-buttons");
+        buttons.style.display = "none";
+        let page = 1;
+        let totalPages = 1;
+        let playlists = [];
+
+        const getPlayLists = async () => {
+            try {
+                const res = await fetch('/user/playlists');
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+                const data = await res.json();
+                playlists = data.playlists;
+                displayPlaylists();
+            } catch (e) {
+                console.error('Error fetching playlists:', e);
+            }
+        };
+
+        getPlayLists();
+
+        document.getElementById('search-btn').addEventListener('click', async () => {
+            page = 1;
+            searchMovies();
+        });
+
+        document.getElementById('prev-btn').addEventListener('click', async () => {
+            if (page > 1) page--;
+            searchMovies();
+        });
+
+        document.getElementById('next-btn').addEventListener('click', async () => {
+            if (page < totalPages) page++;
+            searchMovies();
+        });
+
+        document.getElementById('create-playlist-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const playlistName = document.getElementById('playlist-name').value;
+            const isPrivate = document.getElementById('playlist-private').checked;
+            createPlaylist(playlistName, isPrivate);
+            document.getElementById('playlist-name').value = '';
+            document.getElementById('playlist-private').checked = false;
+        });
+
+        async function searchMovies() {
+            const movieName = document.getElementById('search-bar').value;
+            const response = await fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ searchTerm: movieName, page: page })
+            });
+
+            if (response.ok) {
+                buttons.style.display = "block";
+                const data = await response.json();
+                totalPages = Math.ceil(data.totalResults / 10);
+                displayResults(data.Search);
+            } else {
+                console.error('Search failed:', response.status, response.statusText);
+            }
+        }
+
+        function displayResults(movies) {
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = '';
+
+            if (movies && movies.length > 0) {
+                movies.forEach(movie => {
+                    const movieElement = document.createElement('div');
+                    movieElement.classList.add('movie');
+
+                    const title = document.createElement('h2');
+                    title.textContent = movie.Title;
+                    movieElement.appendChild(title);
+
+                    const year = document.createElement('p');
+                    year.textContent = `Year: ${movie.Year}`;
+                    movieElement.appendChild(year);
+
+                    const poster = document.createElement('img');
+                    poster.src = movie.Poster;
+                    poster.alt = `${movie.Title} Poster`;
+                    movieElement.appendChild(poster);
+
+                    const addButton = document.createElement('button');
+                    addButton.textContent = 'Add to Playlist';
+                    addButton.addEventListener('click', () => addToPlaylist(movie));
+                    movieElement.appendChild(addButton);
+
+                    resultsContainer.appendChild(movieElement);
+                });
+            } else {
+                resultsContainer.textContent = 'No results found.';
+            }
+        }
+
+        async function createPlaylist(name, isPrivate) {
+            try {
+                const res = await fetch('/create/playlist', {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: name,
+                        isPrivate: isPrivate
+                    })
+                });
+
+                if (!res.ok) {
+                    throw new Error(`HTTP error! Status: ${res.status}`);
+                }
+
+                const data = await res.json();
+                playlists.push(data.playlist);
+                displayPlaylists();
+            } catch (e) {
+                console.error('Error occurred while creating a playlist:', e);
+            }
+        }
+
+        function addToPlaylist(movie) {
+            const dialogBox = createPlaylistDialog(movie);
+            document.body.appendChild(dialogBox);
+        }
+
+        function createPlaylistDialog(movie) {
+            const dialogContainer = document.createElement('div');
+            setDialogContainerStyles(dialogContainer);
+
+            const select = document.createElement('select');
+            populatePlaylistOptions(select);
+
+            const addButton = document.createElement('button');
+            addButton.textContent = 'Add to this Playlist';
+            addButton.onclick = () => addMovieToPlaylist(select, movie, dialogContainer);
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.onclick = () => document.body.removeChild(dialogContainer);
+
+            dialogContainer.appendChild(select);
+            dialogContainer.appendChild(addButton);
+            dialogContainer.appendChild(cancelButton);
+
+            return dialogContainer;
+        }
+
+        function setDialogContainerStyles(container) {
+            container.style.position = 'fixed';
+            container.style.left = '50%';
+            container.style.top = '50%';
+            container.style.transform = 'translate(-50%, -50%)';
+            container.style.border = '1px solid #ccc';
+            container.style.padding = '20px';
+            container.style.backgroundColor = 'white';
+            container.style.zIndex = '1000';
+        }
+
+        function populatePlaylistOptions(selectElement) {
+            playlists.forEach(playlist => {
+                const option = document.createElement('option');
+                option.value = playlist.name;
+                option.textContent = playlist.name;
+                selectElement.appendChild(option);
+            });
+        }
+
+        async function addMovieToPlaylist(select, movie, dialogContainer) {
+            const selectedPlaylistName = select.value;
+            const playlist = playlists.find(p => p.name === selectedPlaylistName);
+
+            if (playlist) {
+                try {
+                    const res = await fetch('/add/movie', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            playlist: playlist,
+                            movie: movie
+                        })
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! Status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    console.log(data);
+                    playlist.movies.push(movie);
+                    displayPlaylists();
+                    document.body.removeChild(dialogContainer);
+                } catch (e) {
+                    console.error('Error adding movie to playlist:', e);
+                }
+            } else {
+                alert('Playlist not found.');
+            }
+        }
+
+        async function displayPlaylists() {
+            const playlistsContainer = document.getElementById('playlists');
+            playlistsContainer.innerHTML = '';
+
+            playlists.forEach((playlist, index) => {
+                const playlistElement = createPlaylistElement(playlist, index);
+                playlistsContainer.appendChild(playlistElement);
+            });
+        }
+
+        function createPlaylistElement(playlist, index) {
+            const playlistElement = document.createElement('div');
+            playlistElement.classList.add('playlist');
+
+            const title = document.createElement('h3');
+            title.textContent = playlist.name;
+            playlistElement.appendChild(title);
+
+            const privacy = document.createElement('p');
+            privacy.textContent = playlist.isPrivate ? 'Private' : 'Public';
+            playlistElement.appendChild(privacy);
+
+            // Only add the copy link button if the playlist is public
+            if (!playlist.isPrivate) {
+                const copyLinkBtn = document.createElement('button');
+                copyLinkBtn.textContent = 'Copy Link';
+                copyLinkBtn.onclick = () => {
+                    const url = `${window.location.origin}/playlist/${playlist._id}`; // Assuming _id is the ID field
+                    navigator.clipboard.writeText(url).then(() => {
+                        alert('Link copied to clipboard!');
+                    }, (err) => {
+                        console.error('Failed to copy: ', err);
+                    });
+                };
+                playlistElement.appendChild(copyLinkBtn);
+            }
+
+            const moviesList = document.createElement('ul');
+            playlist.movies.forEach((movie, movieIndex) => {
+                const movieItem = document.createElement('li');
+                movieItem.textContent = `${movie.Title} (${movie.Year})`;
+
+                const deleteMovieBtn = document.createElement('button');
+                deleteMovieBtn.textContent = 'Delete Movie';
+                deleteMovieBtn.onclick = () => removeMovieFromPlaylist(playlist, index, movie, movieIndex);
+                movieItem.appendChild(deleteMovieBtn);
+                moviesList.appendChild(movieItem);
+            });
+            playlistElement.appendChild(moviesList);
+
+            const deletePlaylistBtn = document.createElement('button');
+            deletePlaylistBtn.textContent = 'Delete Playlist';
+            deletePlaylistBtn.onclick = () => removePlaylist(index, playlist);
+            playlistElement.appendChild(deletePlaylistBtn);
+
+            return playlistElement;
+        }
+
+
+
+
+
+
+
+        async function removeMovieFromPlaylist(playlist, playlistIndex, movie, movieIndex) {
+            const res = await fetch("/delete/movie", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    playlist: playlist,
+                    movie: movie
+                })
+            })
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+                return;
+            }
+            const data = await res.json()
+            console.log(data)
+            playlists[playlistIndex].movies.splice(movieIndex, 1);
+            displayPlaylists();
+        }
+
+        async function removePlaylist(playlistIndex, playlist) {
+            const res = await fetch("/delete/playlist", {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                    playlist: playlist
+                })
+            })
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! Status: ${res.status}`);
+                return;
+            }
+            const data = await res.json()
+            console.log(data)
+            playlists.splice(playlistIndex, 1);
+            displayPlaylists();
+        }
+    </script>
+
+
+</body>
+
+</html>

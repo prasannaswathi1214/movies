@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= data.name %></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .data-header {
+            margin-bottom: 20px;
+        }
+        .movie {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .movie img {
+            height: 100px;
+            margin-right: 20px;
+        }
+        .movie-info {
+            flex-grow: 1;
+        }
+        .movie-title {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .movie-year {
+            font-size: 16px;
+        }
+        .movie-type {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="playlist-header">
+        <h1>Playlist Name :  <%=data.name %></h1>
+    </div>
+
+    <% if(data.movies.length > 0) { %>
+        <% data.movies.forEach(function(movie) { %>
+            <div class="movie">
+                <img src="<%= movie.Poster %>" alt="<%= movie.Title %> Poster">
+                <div class="movie-info">
+                    <div class="movie-title"><%= movie.Title %></div>
+                    <div class="movie-year">Year: <%= movie.Year %></div>
+                    <div class="movie-type">Type: <%= movie.Type %></div>
+                </div>
+            </div>
+        <% }); %>
+    <% } else { %>
+        <p>No movies in this data.</p>
+    <% } %>
+</body>
+</html>
